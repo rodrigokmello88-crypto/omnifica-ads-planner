@@ -2,257 +2,545 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Omnifica Ads Planner - Planejador de Tráfego</title>
+  <title>Omnifica Ads Planner - Planejador de tráfego pago com IA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
-    body{
-      margin:0;
-      min-height:100vh;
-      background:#020617;
-      color:#e5e7eb;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
+    :root {
+      --bg: #020617;
+      --panel: #020617;
+      --card: #020617;
+      --border: #1f2937;
+      --accent: #06b6d4;
+      --accent-soft: #22c55e;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
     }
-    header{
-      width:100%;
-      max-width:1100px;
-      padding:16px 20px 8px;
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
+    * {
+      box-sizing: border-box;
     }
-    .brand{
-      display:flex;
-      gap:10px;
-      align-items:center;
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    .brand img{
-      width:42px;
-      height:42px;
-      border-radius:12px;
-      object-fit:cover;
-      border:1px solid rgba(56,189,248,.7);
-      box-shadow:0 0 16px rgba(8,47,73,.9);
+    a {
+      color: var(--accent);
+      text-decoration: none;
     }
-    h1{
-      font-size:18px;
-      margin:0;
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(2, 6, 23, 0.92);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
     }
-    .user-info{
-      font-size:12px;
-      text-align:right;
-      color:#9ca3af;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .pill{
-      display:inline-block;
-      font-size:11px;
-      padding:2px 7px;
-      border-radius:999px;
-      background:rgba(34,197,94,.18);
-      border:1px solid rgba(34,197,94,.4);
-      color:#bbf7d0;
-      margin-top:1px;
+    .brand img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
     }
-    main{
-      width:100%;
-      max-width:1100px;
-      padding:8px 20px 24px;
-      display:grid;
-      grid-template-columns:minmax(0,1.1fr) minmax(0,1.1fr);
-      gap:18px;
+    .brand-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
-    @media(max-width:900px){
-      main{grid-template-columns:1fr;}
+    .brand-title strong {
+      font-size: 16px;
     }
-    .card{
-      background:rgba(15,23,42,.95);
-      border-radius:18px;
-      padding:16px 18px;
-      border:1px solid rgba(148,163,184,.4);
-      box-shadow:0 18px 30px rgba(15,23,42,.85);
+    .brand-title span {
+      font-size: 12px;
+      color: var(--text-muted);
     }
-    label{
-      display:block;
-      font-size:13px;
-      margin-bottom:3px;
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 14px;
     }
-    input,textarea{
-      width:100%;
-      background:rgba(15,23,42,.9);
-      border-radius:10px;
-      border:1px solid rgba(148,163,184,.5);
-      padding:7px 9px;
-      font-size:13px;
-      color:#f9fafb;
-      outline:none;
+    .status-pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #16a34a;
+      color: #bbf7d0;
+      background: rgba(34, 197, 94, 0.1);
     }
-    input:focus,textarea:focus{
-      border-color:#22c55e;
-      box-shadow:0 0 0 1px rgba(34,197,94,.3);
+    .status-pill.warn {
+      border-color: #f97316;
+      color: #fed7aa;
+      background: rgba(248, 113, 38, 0.1);
     }
-    textarea{min-height:120px;resize:vertical;}
-    .field{margin-bottom:8px;}
-    button{
-      width:100%;
-      padding:9px 12px;
-      border-radius:999px;
-      border:none;
-      background:linear-gradient(135deg,#22c55e,#22d3ee);
-      color:#020617;
-      font-weight:600;
-      cursor:pointer;
-      margin-top:6px;
-      font-size:14px;
+    .btn-link {
+      border-radius: 999px;
+      padding: 6px 14px;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
     }
-    button:hover{filter:brightness(1.05);}
-    .hint{font-size:11px;color:#9ca3af;margin-top:4px;}
-    .output-title{
-      font-size:13px;
-      font-weight:600;
-      margin-bottom:6px;
-      color:#e5e7eb;
+    .btn-link:hover {
+      background: rgba(6, 182, 212, 0.12);
     }
-    #plan-output{
-      white-space:pre-wrap;
-      font-size:13px;
-      line-height:1.5;
-      background:radial-gradient(circle at top,rgba(56,189,248,.12),transparent 60%);
-      border-radius:12px;
-      padding:12px;
-      border:1px solid rgba(55,65,81,.8);
-      max-height:450px;
-      overflow-y:auto;
+
+    main {
+      max-width: 1180px;
+      width: 100%;
+      margin: 16px auto 32px auto;
+      padding: 0 16px 24px 16px;
     }
-    .status{
-      font-size:12px;
-      margin-top:4px;
+
+    /* GRID PRINCIPAL */
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
     }
-    .status.ok{color:#4ade80;}
-    .status.err{color:#fb7185;}
-    .top-links{
-      font-size:11px;
-      margin-top:4px;
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
-    .top-links a{
-      color:#a5b4fc;
-      text-decoration:none;
-      margin-left:6px;
+    .card {
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 18px 18px 20px 18px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.75);
     }
-    .top-links a:hover{text-decoration:underline;}
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      font-size: 15px;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: var(--text-main);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+    input::placeholder,
+    textarea::placeholder {
+      color: #4b5563;
+      font-size: 13px;
+    }
+
+    .btn-main {
+      width: 100%;
+      border-radius: 999px;
+      padding: 10px 16px;
+      border: none;
+      background: linear-gradient(90deg, #06b6d4, #22c55e);
+      color: #022c22;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .btn-main:hover {
+      filter: brightness(1.05);
+    }
+
+    #planResult {
+      white-space: pre-wrap;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #e5e7eb;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+    #planResult.placeholder {
+      color: #9ca3af;
+    }
+
+    #msg {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .error { color: #fecaca; }
+    .success { color: #bbf7d0; }
+    .muted { color: var(--text-muted); font-size: 12px; }
+
+    /* PLANOS */
+    .plans-section {
+      margin-top: 8px;
+    }
+    .plans-section h2 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    .plans-section > p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      .plans-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .plan-card {
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      padding: 16px 16px 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .plan-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .plan-price {
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .plan-price span {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+    .plan-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .plan-list {
+      font-size: 12px;
+      padding-left: 18px;
+      margin: 6px 0 4px 0;
+      color: var(--text-main);
+    }
+    .plan-list li {
+      margin-bottom: 2px;
+    }
+    .plan-footer {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .plan-cta {
+      margin-top: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      border: 1px solid var(--accent-soft);
+      background: rgba(34, 197, 94, 0.12);
+      color: #bbf7d0;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .plan-cta:hover {
+      background: rgba(34, 197, 94, 0.18);
+    }
+
+    .pix-box {
+      margin-top: 6px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: 1px dashed #22c55e;
+      font-size: 11px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .pix-box img {
+      width: 52px;
+      border-radius: 6px;
+    }
+    .pix-box strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    .paypal {
+      margin-top: 4px;
+      font-size: 11px;
+    }
+    .whats {
+      margin-top: 4px;
+      font-size: 11px;
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="brand">
-      <img src="/logo.png" alt="Logo" />
-      <div>
-        <h1>Omnifica Ads Planner</h1>
-        <div class="top-links">
-          <span>Planejador de tráfego pago com IA</span>
-          <a href="/login">Entrar / trocar usuário</a>
-          <a href="/admin">Área do administrador</a>
-        </div>
+      <img src="logo.png" alt="Logo Omnifica" />
+      <div class="brand-title">
+        <strong>Omnifica Ads Planner</strong>
+        <span>Planejador de tráfego pago com IA</span>
       </div>
     </div>
-    <div class="user-info">
-      <div id="user-name">Visitante</div>
-      <div id="user-plan" class="pill">Plano não autenticado</div>
-    </div>
+    <nav>
+      <a href="/login">Entrar / criar conta</a>
+      <a href="/admin">Área do administrador</a>
+      <span id="authStatus" class="status-pill warn">Não autenticado • faça login para gerar plano</span>
+    </nav>
   </header>
 
   <main>
-    <section class="card">
-      <h2 style="font-size:15px;margin:0 0 8px;">Briefing do negócio</h2>
-      <form id="form-plan">
-        <div class="field">
-          <label>Segmento / Nicho da empresa</label>
-          <input type="text" name="segmento" placeholder="Ex: clínica de estética, hamburgueria delivery, loja de roupas..." required />
+    <section class="grid">
+      <!-- COLUNA ESQUERDA: BRIEFING -->
+      <div class="card">
+        <div class="card-title">Briefing do negócio</div>
+        <p class="hint">
+          Preencha os dados do negócio e do objetivo da campanha. Quanto mais detalhes, melhor será o plano sugerido pela IA.
+        </p>
+
+        <div id="msg"></div>
+
+        <form id="planForm">
+          <label for="segmento">Segmento / Nicho da empresa</label>
+          <input id="segmento" name="segmento" placeholder="Ex: clínica de estética, hamburgueria delivery, loja de roupas..." />
+
+          <label for="objetivo">Objetivo principal da campanha</label>
+          <textarea id="objetivo" name="objetivo" placeholder="Ex: gerar leads no WhatsApp, aumentar pedidos no iFood, vender infoproduto, captar novos alunos..."></textarea>
+
+          <label for="orcamento">Orçamento mensal aproximado</label>
+          <input id="orcamento" name="orcamento" placeholder="Ex: R$ 1.500,00 / mês" />
+
+          <label for="plataformas">Plataformas onde deseja anunciar</label>
+          <input id="plataformas" name="plataformas" placeholder="Ex: Meta Ads (Facebook/Instagram), Google Ads, TikTok Ads..." />
+
+          <button type="submit" class="btn-main">Gerar planejamento de 30 dias com IA</button>
+          <p class="muted">
+            O plano é personalizado de acordo com o seu plano ativo e os dados do negócio.
+          </p>
+        </form>
+      </div>
+
+      <!-- COLUNA DIREITA: RESULTADO -->
+      <div class="card">
+        <div class="card-title">Planejamento gerado</div>
+        <p class="hint">
+          Preencha o briefing ao lado e clique em <strong>"Gerar planejamento"</strong> para ver o resultado aqui.
+        </p>
+        <div id="planResult" class="placeholder">
+          Preencha o briefing para gerar um plano completo de tráfego pago de 30 dias.
         </div>
-        <div class="field">
-          <label>Objetivo principal da campanha</label>
-          <input type="text" name="objetivo" placeholder="Ex: gerar leads no WhatsApp, aumentar pedidos no iFood, vender infoproduto..." required />
-        </div>
-        <div class="field">
-          <label>Orçamento mensal aproximado</label>
-          <input type="text" name="orcamento" placeholder="Ex: R$ 1.500,00 / mês" required />
-        </div>
-        <div class="field">
-          <label>Plataformas onde deseja anunciar</label>
-          <input type="text" name="plataformas" placeholder="Ex: Meta Ads (Facebook/Instagram), Google Ads, TikTok Ads..." />
-        </div>
-        <button type="submit">Gerar planejamento de 30 dias com IA</button>
-        <div class="hint">
-          O plano é personalizado de acordo com o seu plano ativo e dados do negócio.
-        </div>
-        <div id="status" class="status"></div>
-      </form>
+      </div>
     </section>
 
-    <section class="card">
-      <div class="output-title">Planejamento gerado</div>
-      <div id="plan-output">Preencha o briefing ao lado e clique em "Gerar planejamento" para ver o resultado aqui.</div>
+    <!-- SEÇÃO DE PLANOS -->
+    <section class="plans-section">
+      <h2>Planos Omnifica Ads Planner</h2>
+      <p>
+        Escolha o plano ideal para a realidade do seu negócio ou dos seus clientes. O acesso é válido por 30 dias e pode ser renovado.
+      </p>
+
+      <div class="plans-grid">
+        <!-- BÁSICO -->
+        <article class="plan-card">
+          <div class="plan-name">Plano Básico</div>
+          <div class="plan-price">R$ 47,00 <span>/ 30 dias</span></div>
+          <div class="plan-desc">
+            Indicado para pequenos negócios locais que precisam de um plano de mídia simples e direto.
+          </div>
+          <ul class="plan-list">
+            <li>1 negócio cadastrado</li>
+            <li>Planejamentos ilimitados para esse negócio</li>
+            <li>Foco em Meta Ads (Facebook / Instagram)</li>
+            <li>Suporte básico por WhatsApp</li>
+          </ul>
+          <div class="pix-box">
+            <img src="pix-qr.png" alt="QR Code Pix" />
+            <div>
+              <strong>Pagamento via Pix</strong>
+              Escaneie o QR Code ou envie para o WhatsApp após o pagamento:<br />
+              <span>WhatsApp: (51) 98639-0444</span>
+            </div>
+          </div>
+          <div class="paypal">
+            <strong>PayPal:</strong> rodrigokmello@hotmail.com
+          </div>
+          <div class="plan-footer">
+            Após o pagamento, crie sua conta em <strong>Entrar / criar conta</strong> e aguarde a aprovação.
+          </div>
+          <div class="plan-cta" onclick="irParaCadastro()">Criar conta para usar o plano</div>
+        </article>
+
+        <!-- STANDARD -->
+        <article class="plan-card">
+          <div class="plan-name">Plano Standard</div>
+          <div class="plan-price">R$ 97,00 <span>/ 30 dias</span></div>
+          <div class="plan-desc">
+            Ideal para quem gerencia mais de um produto ou serviço e quer testar diferentes estratégias.
+          </div>
+          <ul class="plan-list">
+            <li>Até 3 negócios cadastrados</li>
+            <li>Planejamentos ilimitados com IA</li>
+            <li>Meta Ads + Google Ads</li>
+            <li>Sugestões de criativos e testes A/B</li>
+          </ul>
+          <div class="pix-box">
+            <img src="pix-qr.png" alt="QR Code Pix" />
+            <div>
+              <strong>Pagamento via Pix</strong>
+              Escaneie o QR Code e envie o comprovante no WhatsApp:<br />
+              <span>(51) 98639-0444</span>
+            </div>
+          </div>
+          <div class="paypal">
+            <strong>PayPal:</strong> rodrigokmello@hotmail.com
+          </div>
+          <div class="plan-footer">
+            Plano recomendado para gestores de tráfego que atendem pequenos clientes locais.
+          </div>
+          <div class="plan-cta" onclick="irParaCadastro()">Quero esse plano</div>
+        </article>
+
+        <!-- PREMIUM -->
+        <article class="plan-card">
+          <div class="plan-name">Plano Premium</div>
+          <div class="plan-price">R$ 197,00 <span>/ 30 dias</span></div>
+          <div class="plan-desc">
+            Para quem quer extrair o máximo da IA no planejamento de mídia para vários projetos.
+          </div>
+          <ul class="plan-list">
+            <li>Até 10 negócios cadastrados</li>
+            <li>Planejamentos avançados (funil, remarketing, lançamentos)</li>
+            <li>Meta Ads + Google Ads + TikTok Ads</li>
+            <li>Suporte prioritário por WhatsApp</li>
+          </ul>
+          <div class="pix-box">
+            <img src="pix-qr.png" alt="QR Code Pix" />
+            <div>
+              <strong>Pagamento via Pix</strong>
+              Use o mesmo QR Code e informe o plano desejado no WhatsApp:<br />
+              <span>(51) 98639-0444</span>
+            </div>
+          </div>
+          <div class="paypal">
+            <strong>PayPal:</strong> rodrigokmello@hotmail.com
+          </div>
+          <div class="plan-footer">
+            Excelente opção para agências e freelancers que atendem vários nichos.
+          </div>
+          <div class="plan-cta" onclick="irParaCadastro()">Assinar plano premium</div>
+        </article>
+      </div>
     </section>
   </main>
 
   <script>
-    const userNameEl = document.getElementById("user-name");
-    const userPlanEl = document.getElementById("user-plan");
-    const formPlan = document.getElementById("form-plan");
-    const statusEl = document.getElementById("status");
-    const outputEl = document.getElementById("plan-output");
+    const token = localStorage.getItem("omnifica_token");
+    const name = localStorage.getItem("omnifica_name");
+    const plan = localStorage.getItem("omnifica_plan");
 
-    const token = localStorage.getItem("omnifica_session_token");
-    const userName = localStorage.getItem("omnifica_user_name");
-    const userPlan = localStorage.getItem("omnifica_user_plan");
+    const msgEl = document.getElementById("msg");
+    const resultEl = document.getElementById("planResult");
+    const authStatusEl = document.getElementById("authStatus");
 
-    if (token && userName) {
-      userNameEl.textContent = userName;
-      userPlanEl.textContent = "Plano " + (userPlan || "").toUpperCase();
-    } else {
-      userNameEl.textContent = "Não autenticado";
-      userPlanEl.textContent = "Faça login para gerar o plano";
+    function showMessage(text, type) {
+      msgEl.textContent = text || "";
+      msgEl.className = type || "";
     }
 
-    formPlan.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
+    function atualizarStatus() {
       if (!token) {
-        alert("Você precisa estar logado e aprovado para usar o planner.");
-        window.location.href = "/login";
+        authStatusEl.textContent = "Não autenticado • faça login para gerar plano";
+        authStatusEl.className = "status-pill warn";
+      } else {
+        const nome = name || "usuário";
+        authStatusEl.textContent = `Autenticado como ${nome} • plano ${plan || "indefinido"}`;
+        authStatusEl.className = "status-pill";
+      }
+    }
+    atualizarStatus();
+
+    function irParaCadastro() {
+      window.location.href = "/login";
+    }
+
+    document.getElementById("planForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showMessage("", "");
+      if (!token) {
+        showMessage("Faça login antes de gerar o plano.", "error");
         return;
       }
 
-      statusEl.textContent = "Gerando planejamento com IA...";
-      statusEl.className = "status";
-      outputEl.textContent = "";
+      resultEl.textContent = "";
+      resultEl.classList.remove("placeholder");
+      showMessage("Gerando plano com IA, aguarde alguns segundos...", "muted");
 
-      const formData = new FormData(formPlan);
-      const body = Object.fromEntries(formData.entries());
+      const body = {
+        segmento: document.getElementById("segmento").value.trim(),
+        objetivo: document.getElementById("objetivo").value.trim(),
+        orcamento: document.getElementById("orcamento").value.trim(),
+        plataformas: document.getElementById("plataformas").value.trim(),
+      };
 
       try {
         const res = await fetch("/api/plan", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-session-token": token
+            "x-session-token": token,
           },
-          body: JSON.stringify(body)
+          body: JSON.stringify(body),
         });
-
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Erro ao gerar plano.");
-        outputEl.textContent = data.plan || "Plano gerado, mas veio vazio.";
-        statusEl.textContent = "Planejamento gerado com sucesso.";
-        statusEl.className = "status ok";
+
+        if (!res.ok || !data.ok) {
+          showMessage(data.error || "Erro ao gerar plano.", "error");
+          resultEl.textContent = "Não foi possível gerar o plano. Tente novamente.";
+          resultEl.classList.add("placeholder");
+          return;
+        }
+
+        showMessage("Plano gerado com sucesso!", "success");
+        resultEl.textContent = data.plan;
       } catch (err) {
-        statusEl.textContent = err.message;
-        statusEl.className = "status err";
+        console.error(err);
+        showMessage("Erro de conexão com o servidor.", "error");
+        resultEl.textContent = "Não foi possível gerar o plano por instabilidade na conexão.";
+        resultEl.classList.add("placeholder");
       }
     });
   </script>
 </body>
 </html>
-
