@@ -1,1 +1,328 @@
-<h1>Login</h1>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Omnifica Ads Planner - Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #050816;
+      color: #f9fafb;
+    }
+    .card {
+      width: 100%;
+      max-width: 900px;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+      gap: 24px;
+    }
+    @media (max-width: 800px) {
+      .card { grid-template-columns: 1fr; }
+    }
+    .logo-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .logo-img {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      object-fit: cover;
+      border: 1px solid rgba(56, 189, 248, 0.7);
+      box-shadow: 0 0 25px rgba(8, 47, 73, 0.9);
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 14px;
+    }
+    .field {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #e5e7eb;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+      color: #f9fafb;
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3);
+    }
+    button {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #22c55e, #22d3ee);
+      color: #0b1120;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    button:hover { filter: brightness(1.05); }
+    .pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.1);
+      color: #bbf7d0;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      margin-bottom: 6px;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.15);
+      color: #bbf7d0;
+    }
+    .muted {
+      font-size: 11px;
+      color: #9ca3af;
+      line-height: 1.4;
+      margin-top: 6px;
+    }
+    .qr-box {
+      text-align: center;
+      background: radial-gradient(circle at top, rgba(52, 211, 153, 0.2), transparent 60%);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+    .qr-img {
+      width: 170px;
+      border-radius: 14px;
+      background: #f9fafb;
+      padding: 10px;
+    }
+    .whats {
+      font-size: 13px;
+      margin-top: 10px;
+      color: #e5e7eb;
+    }
+    .whats span {
+      color: #22c55e;
+      font-weight: 600;
+    }
+    .link-home {
+      display: inline-block;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #a5b4fc;
+      text-decoration: none;
+    }
+    .link-home:hover { text-decoration: underline; }
+    .alert {
+      font-size: 12px;
+      color: #fbbf24;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- COLUNA ESQUERDA: FORMULÁRIOS -->
+    <div>
+      <div class="logo-box">
+        <img src="/logo.png" class="logo-img" alt="Logo Omnifica" />
+        <div>
+          <h1>Omnifica Ads Planner</h1>
+          <div class="subtitle">Crie sua conta, escolha o plano e acesse o planejador de tráfego com IA.</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-register">Criar conta</button>
+        <button class="tab-btn" id="tab-login">Já tenho conta</button>
+      </div>
+
+      <!-- FORM REGISTRO -->
+      <form id="form-register">
+        <span class="pill">Passo 1 · Cadastro</span>
+
+        <div class="field">
+          <label>Nome completo</label>
+          <input type="text" name="name" required />
+        </div>
+
+        <div class="field">
+          <label>E-mail</label>
+          <input type="email" name="email" required />
+        </div>
+
+        <div class="field">
+          <label>Senha (mínimo 6 caracteres)</label>
+          <input type="password" name="password" minlength="6" required />
+        </div>
+
+        <div class="field">
+          <label>Plano desejado</label>
+          <select name="plan" required>
+            <option value="basico">Básico · 30 dias</option>
+            <option value="standard">Standard · 30 dias</option>
+            <option value="premium">Premium · 30 dias</option>
+          </select>
+        </div>
+
+        <button type="submit">Criar conta</button>
+        <div class="muted">
+          Após criar a conta, faça o pagamento via Pix e envie o comprovante
+          para o WhatsApp. O acesso é liberado manualmente em até 24h.
+        </div>
+        <div id="msg-register" class="alert"></div>
+      </form>
+
+      <!-- FORM LOGIN -->
+      <form id="form-login" style="display:none;">
+        <span class="pill">Acesso existente</span>
+
+        <div class="field">
+          <label>E-mail</label>
+          <input type="email" name="email" required />
+        </div>
+
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" name="password" required />
+        </div>
+
+        <button type="submit">Entrar</button>
+        <div class="muted">
+          Se seu plano ainda estiver pendente de aprovação,
+          o acesso será bloqueado até a confirmação do pagamento.
+        </div>
+        <div id="msg-login" class="alert"></div>
+      </form>
+
+      <a href="/" class="link-home">← Voltar para a página inicial</a>
+    </div>
+
+    <!-- COLUNA DIREITA: PAGAMENTO -->
+    <div>
+      <div class="qr-box">
+        <h3 style="margin-top:0;font-size:14px;">Pagamento via Pix</h3>
+        <img src="/pix-qr.png" class="qr-img" alt="QR Pix" />
+        <div class="muted">
+          Escaneie o QR Code para realizar o pagamento do plano escolhido.
+          Após o pagamento, envie o comprovante para:
+        </div>
+        <div class="whats">
+          WhatsApp: <span>+55 51 98639-0444</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tabRegister = document.getElementById("tab-register");
+    const tabLogin = document.getElementById("tab-login");
+    const formRegister = document.getElementById("form-register");
+    const formLogin = document.getElementById("form-login");
+    const msgRegister = document.getElementById("msg-register");
+    const msgLogin = document.getElementById("msg-login");
+
+    tabRegister.onclick = () => {
+      tabRegister.classList.add("active");
+      tabLogin.classList.remove("active");
+      formRegister.style.display = "block";
+      formLogin.style.display = "none";
+    };
+
+    tabLogin.onclick = () => {
+      tabLogin.classList.add("active");
+      tabRegister.classList.remove("active");
+      formRegister.style.display = "none";
+      formLogin.style.display = "block";
+    };
+
+    formRegister.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msgRegister.textContent = "Enviando...";
+      const formData = new FormData(formRegister);
+      const body = Object.fromEntries(formData.entries());
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Erro ao cadastrar.");
+        msgRegister.style.color = "#4ade80";
+        msgRegister.textContent = data.message || "Conta criada com sucesso.";
+      } catch (err) {
+        msgRegister.style.color = "#f97316";
+        msgRegister.textContent = err.message;
+      }
+    });
+
+    formLogin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msgLogin.textContent = "Autenticando...";
+      const formData = new FormData(formLogin);
+      const body = Object.fromEntries(formData.entries());
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Erro ao entrar.");
+        // Salva token e dados básicos para o planner
+        localStorage.setItem("omnifica_session_token", data.token);
+        localStorage.setItem("omnifica_user_name", data.name);
+        localStorage.setItem("omnifica_user_plan", data.plan);
+        window.location.href = "/";
+      } catch (err) {
+        msgLogin.style.color = "#f97316";
+        msgLogin.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>
