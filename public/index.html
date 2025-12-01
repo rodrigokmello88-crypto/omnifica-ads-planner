@@ -1,1 +1,258 @@
-<h1>Omnifica Ads Planner</h1>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Omnifica Ads Planner - Planejador de Tráfego</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:#020617;
+      color:#e5e7eb;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+    header{
+      width:100%;
+      max-width:1100px;
+      padding:16px 20px 8px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .brand img{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      object-fit:cover;
+      border:1px solid rgba(56,189,248,.7);
+      box-shadow:0 0 16px rgba(8,47,73,.9);
+    }
+    h1{
+      font-size:18px;
+      margin:0;
+    }
+    .user-info{
+      font-size:12px;
+      text-align:right;
+      color:#9ca3af;
+    }
+    .pill{
+      display:inline-block;
+      font-size:11px;
+      padding:2px 7px;
+      border-radius:999px;
+      background:rgba(34,197,94,.18);
+      border:1px solid rgba(34,197,94,.4);
+      color:#bbf7d0;
+      margin-top:1px;
+    }
+    main{
+      width:100%;
+      max-width:1100px;
+      padding:8px 20px 24px;
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(0,1.1fr);
+      gap:18px;
+    }
+    @media(max-width:900px){
+      main{grid-template-columns:1fr;}
+    }
+    .card{
+      background:rgba(15,23,42,.95);
+      border-radius:18px;
+      padding:16px 18px;
+      border:1px solid rgba(148,163,184,.4);
+      box-shadow:0 18px 30px rgba(15,23,42,.85);
+    }
+    label{
+      display:block;
+      font-size:13px;
+      margin-bottom:3px;
+    }
+    input,textarea{
+      width:100%;
+      background:rgba(15,23,42,.9);
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,.5);
+      padding:7px 9px;
+      font-size:13px;
+      color:#f9fafb;
+      outline:none;
+    }
+    input:focus,textarea:focus{
+      border-color:#22c55e;
+      box-shadow:0 0 0 1px rgba(34,197,94,.3);
+    }
+    textarea{min-height:120px;resize:vertical;}
+    .field{margin-bottom:8px;}
+    button{
+      width:100%;
+      padding:9px 12px;
+      border-radius:999px;
+      border:none;
+      background:linear-gradient(135deg,#22c55e,#22d3ee);
+      color:#020617;
+      font-weight:600;
+      cursor:pointer;
+      margin-top:6px;
+      font-size:14px;
+    }
+    button:hover{filter:brightness(1.05);}
+    .hint{font-size:11px;color:#9ca3af;margin-top:4px;}
+    .output-title{
+      font-size:13px;
+      font-weight:600;
+      margin-bottom:6px;
+      color:#e5e7eb;
+    }
+    #plan-output{
+      white-space:pre-wrap;
+      font-size:13px;
+      line-height:1.5;
+      background:radial-gradient(circle at top,rgba(56,189,248,.12),transparent 60%);
+      border-radius:12px;
+      padding:12px;
+      border:1px solid rgba(55,65,81,.8);
+      max-height:450px;
+      overflow-y:auto;
+    }
+    .status{
+      font-size:12px;
+      margin-top:4px;
+    }
+    .status.ok{color:#4ade80;}
+    .status.err{color:#fb7185;}
+    .top-links{
+      font-size:11px;
+      margin-top:4px;
+    }
+    .top-links a{
+      color:#a5b4fc;
+      text-decoration:none;
+      margin-left:6px;
+    }
+    .top-links a:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="/logo.png" alt="Logo" />
+      <div>
+        <h1>Omnifica Ads Planner</h1>
+        <div class="top-links">
+          <span>Planejador de tráfego pago com IA</span>
+          <a href="/login">Entrar / trocar usuário</a>
+          <a href="/admin">Área do administrador</a>
+        </div>
+      </div>
+    </div>
+    <div class="user-info">
+      <div id="user-name">Visitante</div>
+      <div id="user-plan" class="pill">Plano não autenticado</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2 style="font-size:15px;margin:0 0 8px;">Briefing do negócio</h2>
+      <form id="form-plan">
+        <div class="field">
+          <label>Segmento / Nicho da empresa</label>
+          <input type="text" name="segmento" placeholder="Ex: clínica de estética, hamburgueria delivery, loja de roupas..." required />
+        </div>
+        <div class="field">
+          <label>Objetivo principal da campanha</label>
+          <input type="text" name="objetivo" placeholder="Ex: gerar leads no WhatsApp, aumentar pedidos no iFood, vender infoproduto..." required />
+        </div>
+        <div class="field">
+          <label>Orçamento mensal aproximado</label>
+          <input type="text" name="orcamento" placeholder="Ex: R$ 1.500,00 / mês" required />
+        </div>
+        <div class="field">
+          <label>Plataformas onde deseja anunciar</label>
+          <input type="text" name="plataformas" placeholder="Ex: Meta Ads (Facebook/Instagram), Google Ads, TikTok Ads..." />
+        </div>
+        <button type="submit">Gerar planejamento de 30 dias com IA</button>
+        <div class="hint">
+          O plano é personalizado de acordo com o seu plano ativo e dados do negócio.
+        </div>
+        <div id="status" class="status"></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="output-title">Planejamento gerado</div>
+      <div id="plan-output">Preencha o briefing ao lado e clique em "Gerar planejamento" para ver o resultado aqui.</div>
+    </section>
+  </main>
+
+  <script>
+    const userNameEl = document.getElementById("user-name");
+    const userPlanEl = document.getElementById("user-plan");
+    const formPlan = document.getElementById("form-plan");
+    const statusEl = document.getElementById("status");
+    const outputEl = document.getElementById("plan-output");
+
+    const token = localStorage.getItem("omnifica_session_token");
+    const userName = localStorage.getItem("omnifica_user_name");
+    const userPlan = localStorage.getItem("omnifica_user_plan");
+
+    if (token && userName) {
+      userNameEl.textContent = userName;
+      userPlanEl.textContent = "Plano " + (userPlan || "").toUpperCase();
+    } else {
+      userNameEl.textContent = "Não autenticado";
+      userPlanEl.textContent = "Faça login para gerar o plano";
+    }
+
+    formPlan.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!token) {
+        alert("Você precisa estar logado e aprovado para usar o planner.");
+        window.location.href = "/login";
+        return;
+      }
+
+      statusEl.textContent = "Gerando planejamento com IA...";
+      statusEl.className = "status";
+      outputEl.textContent = "";
+
+      const formData = new FormData(formPlan);
+      const body = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch("/api/plan", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-session-token": token
+          },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Erro ao gerar plano.");
+        outputEl.textContent = data.plan || "Plano gerado, mas veio vazio.";
+        statusEl.textContent = "Planejamento gerado com sucesso.";
+        statusEl.className = "status ok";
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = "status err";
+      }
+    });
+  </script>
+</body>
+</html>
+
