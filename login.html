@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login – Omnifica Ads Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+      color: #e5e7eb;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #020617;
+      border-radius: 18px;
+      border: 1px solid #1f2937;
+      padding: 18px;
+      box-shadow: 0 24px 60px rgba(15,23,42,.9);
+      font-size: 13px;
+    }
+    h1 { margin: 0 0 8px; font-size: 20px; }
+    h2 { margin: 14px 0 6px; font-size: 15px; }
+    p { margin: 0 0 10px; color:#9ca3af; }
+    label { display:block; margin-top:8px; }
+    input, select {
+      width: 100%;
+      margin-top: 4px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid #111827;
+      background:#020617;
+      color:#e5e7eb;
+      outline:none;
+      font-size:13px;
+    }
+    input:focus, select:focus { border-color:#a855f7; }
+    button {
+      border-radius: 999px;
+      border:none;
+      padding:8px 16px;
+      margin-top:10px;
+      background: radial-gradient(circle at top left,#7c3aed,#a855f7);
+      color:white;
+      font-weight:600;
+      cursor:pointer;
+      width:100%;
+    }
+    button:disabled { opacity:.6; cursor:wait; }
+    .status { font-size:12px; margin-top:6px; }
+    .status.ok { color:#4ade80; }
+    .status.err { color:#f97373; }
+    .muted { font-size:11px; color:#9ca3af; margin-top:6px; }
+    a { color:#a855f7; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Omnifica Ads Planner</h1>
+    <p>Acesse com seu e-mail e senha. Se ainda não tiver conta, crie abaixo.</p>
+
+    <h2>Entrar</h2>
+    <label for="loginEmail">E-mail</label>
+    <input id="loginEmail" type="email" placeholder="email@exemplo.com" />
+
+    <label for="loginSenha">Senha</label>
+    <input id="loginSenha" type="password" placeholder="Sua senha" />
+
+    <button id="btnLogin" onclick="doLogin()">Entrar</button>
+    <div id="loginStatus" class="status"></div>
+
+    <h2>Criar conta</h2>
+    <p>Crie sua conta, escolha o plano e depois faça o pagamento. O administrador aprova o acesso após confirmar o pagamento.</p>
+
+    <label for="regNome">Nome</label>
+    <input id="regNome" type="text" placeholder="Seu nome" />
+
+    <label for="regEmail">E-mail</label>
+    <input id="regEmail" type="email" placeholder="email@exemplo.com" />
+
+    <label for="regSenha">Senha</label>
+    <input id="regSenha" type="password" placeholder="Mínimo 6 caracteres" />
+
+    <label for="regPlano">Plano desejado</label>
+    <select id="regPlano">
+      <option value="Básico">Básico – R$ 47,00 / 30 dias</option>
+      <option value="Standard" selected>Standard – R$ 97,00 / 30 dias</option>
+      <option value="Premium">Premium – R$ 197,00 / 30 dias</option>
+    </select>
+
+    <button id="btnReg" onclick="doRegister()">Criar conta</button>
+    <div id="regStatus" class="status"></div>
+
+    <div class="muted" style="margin-top:10px;">
+      Após criar a conta, escolha o plano, faça o pagamento via PIX/PayPal e envie o comprovante + e-mail para
+      o WhatsApp <strong>(51) 98639‑0444</strong>. Seu acesso será liberado depois de aprovado.
+    </div>
+
+    <div class="muted" style="margin-top:10px;">
+      <a href="/">Voltar para a página inicial</a>
+    </div>
+  </div>
+
+  <script>
+    const loginStatus = document.getElementById("loginStatus");
+    const regStatus = document.getElementById("regStatus");
+    const btnLogin = document.getElementById("btnLogin");
+    const btnReg = document.getElementById("btnReg");
+
+    async function doLogin() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const senha = document.getElementById("loginSenha").value.trim();
+      loginStatus.textContent = "";
+      loginStatus.className = "status";
+      if (!email || !senha) {
+        loginStatus.textContent = "Preencha e-mail e senha.";
+        loginStatus.className = "status err";
+        return;
+      }
+      btnLogin.disabled = true;
+      loginStatus.textContent = "Validando...";
+      try {
+        const resp = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ email, password: senha })
+        });
+        const data = await resp.json().catch(()=>({}));
+        if (!resp.ok || !data.ok || !data.token) {
+          throw new Error(data.error || "Login inválido.");
+        }
+        localStorage.setItem("omnifica_token", data.token);
+        localStorage.setItem("omnifica_user_name", data.name || "");
+        localStorage.setItem("omnifica_user_plan", data.plan || "");
+        localStorage.setItem("omnifica_user_status", data.status || "");
+        loginStatus.textContent = "Login realizado com sucesso. Redirecionando...";
+        loginStatus.className = "status ok";
+        setTimeout(()=>{ window.location.href = "/"; }, 700);
+      } catch (err) {
+        loginStatus.textContent = err.message || "Erro ao fazer login.";
+        loginStatus.className = "status err";
+      } finally {
+        btnLogin.disabled = false;
+      }
+    }
+
+    async function doRegister() {
+      const nome = document.getElementById("regNome").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const senha = document.getElementById("regSenha").value.trim();
+      const plano = document.getElementById("regPlano").value;
+      regStatus.textContent = "";
+      regStatus.className = "status";
+      if (!nome || !email || !senha) {
+        regStatus.textContent = "Preencha nome, e-mail e senha.";
+        regStatus.className = "status err";
+        return;
+      }
+      if (senha.length < 6) {
+        regStatus.textContent = "A senha deve ter pelo menos 6 caracteres.";
+        regStatus.className = "status err";
+        return;
+      }
+      btnReg.disabled = true;
+      regStatus.textContent = "Criando conta...";
+      try {
+        const resp = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ name: nome, email, password: senha, plan: plano })
+        });
+        const data = await resp.json().catch(()=>({}));
+        if (!resp.ok || !data.ok) {
+          throw new Error(data.error || "Erro ao criar conta.");
+        }
+        regStatus.textContent = data.message || "Conta criada. Agora faça o pagamento e aguarde aprovação.";
+        regStatus.className = "status ok";
+        document.getElementById("regNome").value = "";
+        document.getElementById("regEmail").value = "";
+        document.getElementById("regSenha").value = "";
+      } catch (err) {
+        regStatus.textContent = err.message || "Erro ao criar conta.";
+        regStatus.className = "status err";
+      } finally {
+        btnReg.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

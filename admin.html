@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – Omnifica Ads Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+      color:#e5e7eb;
+      min-height:100vh;
+    }
+    .shell { max-width:960px; margin:0 auto; padding:20px 16px 40px; }
+    .card { background:#020617; border-radius:16px; border:1px solid #1f2937; padding:16px; }
+    h1 { margin:0 0 8px; font-size:20px; }
+    label { display:block; margin-top:8px; font-size:13px; }
+    input {
+      width:100%; margin-top:4px; padding:8px 10px; border-radius:999px;
+      border:1px solid #111827; background:#020617; color:#e5e7eb; outline:none; font-size:13px;
+    }
+    input:focus { border-color:#a855f7; }
+    button {
+      border-radius:999px; border:none; padding:8px 16px; margin-top:10px;
+      background: radial-gradient(circle at top left,#7c3aed,#a855f7); color:white; font-weight:600; cursor:pointer;
+    }
+    button.small { padding:4px 8px; font-size:11px; margin:0 4px 4px 0; }
+    button:disabled { opacity:.6; cursor:wait; }
+    .status { font-size:12px; margin-top:6px; }
+    .status.ok { color:#4ade80; }
+    .status.err { color:#f97373; }
+    table { width:100%; border-collapse:collapse; font-size:12px; margin-top:12px; }
+    th,td { border-bottom:1px solid #111827; padding:6px 4px; text-align:left; }
+    th { color:#9ca3af; }
+    .tag { border-radius:999px; padding:2px 8px; border:1px solid #4b5563; font-size:11px; display:inline-block; }
+    .tag.pending { color:#f97316; border-color:#f97316; }
+    .tag.approved { color:#4ade80; border-color:#22c55e; }
+    .tag.blocked { color:#f97373; border-color:#ef4444; }
+    .muted { font-size:12px; color:#9ca3af; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="card">
+      <h1>Painel administrativo</h1>
+      <p class="muted">
+        Use este painel para ver as contas criadas, conferir o plano escolhido e aprovar o acesso
+        após a confirmação do pagamento. Apenas contas <strong>aprovadas</strong> conseguem usar o planner.
+      </p>
+
+      <div id="loginArea">
+        <label for="adminSenha">Senha do administrador</label>
+        <input id="adminSenha" type="password" placeholder="Senha definida na variável ADMIN_PASSWORD" />
+        <button id="btnAdminLogin" onclick="doAdminLogin()">Entrar no painel</button>
+        <div id="adminLoginStatus" class="status"></div>
+      </div>
+
+      <div id="panelArea" style="display:none;">
+        <p class="muted">
+          Dica de fluxo: a cada pagamento, confira o valor, identifique o e-mail do cliente, aprove o usuário
+          e anote o controle em uma planilha (plano, data, valor, status).
+        </p>
+        <div id="usersWrap" class="muted">Carregando usuários...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const adminLoginStatus = document.getElementById("adminLoginStatus");
+    const adminSenhaInput = document.getElementById("adminSenha");
+    const btnAdminLogin = document.getElementById("btnAdminLogin");
+    const loginArea = document.getElementById("loginArea");
+    const panelArea = document.getElementById("panelArea");
+    const usersWrap = document.getElementById("usersWrap");
+
+    let adminSecret = localStorage.getItem("omnifica_admin_secret") || "";
+
+    if (adminSecret) {
+      showPanel();
+      loadUsers();
+    }
+
+    function showPanel() {
+      loginArea.style.display = "none";
+      panelArea.style.display = "block";
+    }
+
+    async function doAdminLogin() {
+      const senha = adminSenhaInput.value.trim();
+      if (!senha) {
+        adminLoginStatus.textContent = "Digite a senha.";
+        adminLoginStatus.className = "status err";
+        return;
+      }
+      btnAdminLogin.disabled = true;
+      adminLoginStatus.textContent = "Validando...";
+      adminLoginStatus.className = "status";
+      try {
+        const resp = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ password: senha })
+        });
+        const data = await resp.json().catch(()=>({}));
+        if (!resp.ok || !data.ok) {
+          throw new Error(data.error || "Senha incorreta.");
+        }
+        adminSecret = senha;
+        localStorage.setItem("omnifica_admin_secret", senha);
+        adminLoginStatus.textContent = "Acesso liberado.";
+        adminLoginStatus.className = "status ok";
+        showPanel();
+        loadUsers();
+      } catch (err) {
+        adminLoginStatus.textContent = err.message || "Erro ao fazer login.";
+        adminLoginStatus.className = "status err";
+      } finally {
+        btnAdminLogin.disabled = false;
+      }
+    }
+
+    async function loadUsers() {
+      if (!adminSecret) return;
+      usersWrap.textContent = "Carregando usuários...";
+      try {
+        const resp = await fetch("/api/admin/users", {
+          headers: {"x-admin-secret": adminSecret}
+        });
+        const data = await resp.json().catch(()=>({}));
+        if (!resp.ok) {
+          throw new Error(data.error || "Erro ao carregar usuários.");
+        }
+        const users = data.users || [];
+        if (!users.length) {
+          usersWrap.textContent = "Nenhum usuário registrado ainda.";
+          return;
+        }
+        let html = "<table><thead><tr><th>Nome</th><th>E-mail</th><th>Plano</th><th>Status</th><th>Criado em</th><th>Ações</th></tr></thead><tbody>";
+        for (const u of users) {
+          const st = u.status || "pending";
+          html += "<tr>";
+          html += "<td>"+(u.name||"")+"</td>";
+          html += "<td>"+(u.email||"")+"</td>";
+          html += "<td>"+(u.plan||"")+"</td>";
+          html += "<td><span class='tag "+st+"'>"+st+"</span></td>";
+          html += "<td>"+(u.createdAt ? new Date(u.createdAt).toLocaleString() : "")+"</td>";
+          html += "<td>";
+          html += "<button class='small' onclick="updateStatus('"+u.id+"','approved')">Aprovar</button>";
+          html += "<button class='small' onclick="updateStatus('"+u.id+"','pending')">Pendente</button>";
+          html += "<button class='small' onclick="updateStatus('"+u.id+"','blocked')">Bloquear</button>";
+          html += "</td>";
+          html += "</tr>";
+        }
+        html += "</tbody></table>";
+        usersWrap.innerHTML = html;
+      } catch (err) {
+        usersWrap.textContent = err.message || "Erro ao carregar usuários.";
+      }
+    }
+
+    async function updateStatus(id, status) {
+      if (!adminSecret) return;
+      try {
+        const resp = await fetch("/api/admin/update-user-status", {
+          method: "POST",
+          headers: {"Content-Type":"application/json","x-admin-secret": adminSecret},
+          body: JSON.stringify({ userId: id, status })
+        });
+        const data = await resp.json().catch(()=>({}));
+        if (!resp.ok || !data.ok) {
+          throw new Error(data.error || "Erro ao atualizar status.");
+        }
+        loadUsers();
+      } catch (err) {
+        alert(err.message || "Erro ao atualizar status.");
+      }
+    }
+
+    window.updateStatus = updateStatus;
+  </script>
+</body>
+</html>
