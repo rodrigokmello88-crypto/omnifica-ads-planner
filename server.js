@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
 const crypto = require("crypto");
-const OpenAI = require("openai");
+const OpenAI = require("openai").OpenAI;
 
 dotenv.config();
 
@@ -11,14 +11,17 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 const DATA_FILE = path.join(__dirname, "users.json");
 
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// OpenAI client
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "",
 });
 
+// Helpers para usuários
 function loadUsers() {
   try {
     const raw = fs.readFileSync(DATA_FILE, "utf-8");
@@ -40,7 +43,7 @@ function generateSessionToken() {
   return crypto.randomBytes(16).toString("hex");
 }
 
-// Rotas de páginas básicas
+// Rotas de páginas
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -53,15 +56,19 @@ app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
-// Registro de usuário
+// ==== AUTENTICAÇÃO DO USUÁRIO ====
+
+// Registro
 app.post("/api/auth/register", (req, res) => {
   try {
     const { name, email, password, plan } = req.body || {};
+
     if (!name || !email || !password || !plan) {
       return res.status(400).json({
         error: "Informe nome, e-mail, senha e plano.",
       });
     }
+
     if (String(password).length < 6) {
       return res.status(400).json({
         error: "A senha deve ter pelo menos 6 caracteres.",
@@ -72,6 +79,7 @@ app.post("/api/auth/register", (req, res) => {
     const existing = data.users.find(
       (u) => u.email.toLowerCase() === String(email).toLowerCase()
     );
+
     if (existing) {
       return res.status(400).json({
         error: "Já existe uma conta com esse e-mail. Tente fazer login.",
@@ -84,7 +92,7 @@ app.post("/api/auth/register", (req, res) => {
       email,
       password,
       plan,
-      status: "pending", // pendente até aprovação após pagamento
+      status: "pending", // pendente até aprovação
       createdAt: new Date().toISOString(),
       sessionToken: null,
     };
@@ -103,27 +111,30 @@ app.post("/api/auth/register", (req, res) => {
   }
 });
 
-// Login de usuário
+// Login
 app.post("/api/auth/login", (req, res) => {
   try {
     const { email, password } = req.body || {};
+
     if (!email || !password) {
       return res.status(400).json({ error: "Informe e-mail e senha." });
     }
+
     const data = loadUsers();
     const user = data.users.find(
       (u) =>
         u.email.toLowerCase() === String(email).toLowerCase() &&
         u.password === password
     );
+
     if (!user) {
       return res.status(401).json({ error: "Login inválido." });
     }
-    // usuário existe, verifica status
+
     if (user.status !== "approved") {
       return res.status(403).json({
         error:
-          "Sua conta ainda não foi aprovada. Aguarde o administrador confirmar o pagamento do plano.",
+          "Sua conta ainda não foi aprovada. Aguarde o administrador confirmar o pagamento.",
         status: user.status,
       });
     }
@@ -146,29 +157,34 @@ app.post("/api/auth/login", (req, res) => {
   }
 });
 
-// Middleware para usuário autenticado
+// Middleware de usuário autenticado
 function requireUser(req, res, next) {
   const token = req.headers["x-session-token"];
+
   if (!token) {
     return res.status(401).json({ error: "Token de sessão ausente." });
   }
+
   const data = loadUsers();
   const user = data.users.find((u) => u.sessionToken === token);
+
   if (!user) {
     return res.status(401).json({ error: "Sessão inválida." });
   }
+
   if (user.status !== "approved") {
     return res.status(403).json({
       error:
         "Sua conta não está aprovada. Aguarde a confirmação do pagamento.",
     });
   }
+
   req.user = user;
-  req._usersData = data;
   next();
 }
 
-// Geração de plano com IA
+// ==== GERAÇÃO DE PLANO COM IA ====
+
 app.post("/api/plan", requireUser, async (req, res) => {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -207,50 +223,65 @@ Entregue o plano no seguinte formato:
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: "Você é um especialista em tráfego pago e mídia online." },
+        {
+          role: "system",
+          content: "Você é um especialista em tráfego pago e mídia online.",
+        },
         { role: "user", content: prompt },
       ],
       temperature: 0.7,
     });
 
     const planText =
-      completion.choices?.[0]?.message?.content ||
-      "Não foi possível gerar o planejamento. Tente novamente.";
+      completion.choices &&
+      completion.choices[0] &&
+      completion.choices[0].message &&
+      completion.choices[0].message.content
+        ? completion.choices[0].message.content
+        : "Não foi possível gerar o planejamento. Tente novamente.";
 
     return res.json({ ok: true, plan: planText });
   } catch (err) {
     console.error("Erro em /api/plan:", err);
     return res.status(500).json({ error: "Erro ao gerar planejamento." });
   }
-}
+});
 
-// Admin – simples verificação por senha (enviada no header)
+// ==== ADMIN ====
+
+// Middleware admin
 function requireAdmin(req, res, next) {
   const secret = req.headers["x-admin-secret"];
   const adminPass = process.env.ADMIN_PASSWORD;
+
   if (!adminPass) {
     return res
       .status(500)
       .json({ error: "ADMIN_PASSWORD não configurada no servidor." });
   }
+
   if (!secret || secret !== adminPass) {
     return res.status(401).json({ error: "Senha de administrador inválida." });
   }
+
   next();
 }
 
-// Login admin (apenas valida a senha antes de usar o painel)
+// Valida senha admin
 app.post("/api/admin/login", (req, res) => {
   try {
     const { password } = req.body || {};
+
     if (!process.env.ADMIN_PASSWORD) {
       return res.status(500).json({
         error: "ADMIN_PASSWORD não configurada no servidor.",
       });
     }
+
     if (!password || password !== process.env.ADMIN_PASSWORD) {
       return res.status(401).json({ error: "Senha incorreta." });
     }
+
     return res.json({ ok: true });
   } catch (err) {
     console.error("Erro em /api/admin/login:", err);
@@ -258,7 +289,7 @@ app.post("/api/admin/login", (req, res) => {
   }
 });
 
-// Listar usuários
+// Lista usuários
 app.get("/api/admin/users", requireAdmin, (req, res) => {
   try {
     const data = loadUsers();
@@ -269,26 +300,33 @@ app.get("/api/admin/users", requireAdmin, (req, res) => {
   }
 });
 
-// Atualizar status do usuário
+// Atualiza status do usuário
 app.post("/api/admin/update-user-status", requireAdmin, (req, res) => {
   try {
     const { userId, status } = req.body || {};
+
     if (!userId || !status) {
       return res.status(400).json({ error: "Informe usuário e status." });
     }
+
     const data = loadUsers();
     const user = data.users.find((u) => u.id === userId);
+
     if (!user) {
       return res.status(404).json({ error: "Usuário não encontrado." });
     }
+
     user.status = status;
     saveUsers(data);
+
     return res.json({ ok: true });
   } catch (err) {
     console.error("Erro em /api/admin/update-user-status:", err);
     return res.status(500).json({ error: "Erro ao atualizar status." });
   }
 });
+
+// ==== START SERVER ====
 
 app.listen(PORT, () => {
   console.log("Omnifica Ads Planner rodando em http://localhost:" + PORT);
